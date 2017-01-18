@@ -464,11 +464,6 @@ function SwitchLastHit()
 end
 
 function OnDraw()
-        local target = GetTarget(3000)
-        if target and MinionForGap(target) ~= nil then
-                Draw.Circle(MinionForGap(target).pos, 75, 1)
-        end
-
         local ColorGrey = Draw.Color(255, 153, 153, 153)
 
         if Config.Harass.Q.Auto.Enabled:Value() then
