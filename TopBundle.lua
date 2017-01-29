@@ -139,7 +139,7 @@ function Poppy:Combo(target)
 end
 
 function Poppy:Harass(target)
-	if target and Utility:ImOk() and Utility:GetPercentMP(myHero) >= self.Config.Harass.Mana:Value() then
+	if target and Utility:ImOk() and Utility:GetPercentMP(myHero) >= self.Config.Harass.Mana:Value() and Utility:ImOk() then
 		if Utility:Mode() == "Harass" or self.Config.Harass.Key:Value() then
 			if self.Config.Harass.W:Value() then self:CastW(target) end
 			if self.Config.Harass.E:Value() then self:CastE(target) end
