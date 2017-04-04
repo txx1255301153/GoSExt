@@ -150,6 +150,7 @@ local Tick = function()
 end
 
 local Draw = function()
+        if myHero.dead or Menu.Draw.Disable:Value() then return end
 	local target = GetTarget(1500, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
 	if target == nil then return end
 	if not inc then inc = 0 end 	
@@ -200,6 +201,9 @@ local Load = function()
         Menu:MenuElement({type = MENU, name = "Auto Harass",  id = "Harass"})
         Menu.Harass:MenuElement({name = "Auto Harass With Extended Q", id = "UseExtQ", value = true})
         Menu.Harass:MenuElement({name = "Mana Manager(%)", id = "Mana", value = 50, min = 1, max = 100, step = 1})
+
+        Menu:MenuElement({type = MENU, name = "Drawings",  id = "Draw"})
+        Menu.Draw:MenuElement({name = "Disable All Drawings", id = "Disable", value = false})
 
         Q    = { range = 650                                                                                                }         
         Q2   = { range = 900 , delay = 0.35, speed = math.huge, width = 25, collision = false, aoe = false, type = "linear" }         
