@@ -163,6 +163,15 @@ local AfterAttack = function()
         local ComboRotation = Menu.Combo.ComboRotation:Value() - 1
 
 	if Mode() == "Combo" then
+		if ComboRotation == 3 then
+	        	if Menu.Combo.W.Use:Value() and W.IsReady() and ValidTarget(target, W.range) then
+		                CastW(target, Menu.Combo.W.UseFast:Value())
+	                elseif Menu.Combo.E.Use:Value() and E.IsReady() and ValidTarget(target, E.range*2) then
+		                CastE(target, Menu.Combo.E.Mode:Value(), Menu.Combo.E.Range:Value())
+	                elseif Menu.Combo.Q.Use:Value() and Q.IsReady() and ValidTarget(target, Q.range) then
+		                CastQ(target)
+	                end
+	        end
 		if Menu.Combo.Q.Use:Value() and (ComboRotation == 0 or Game.CanUseSpell(ComboRotation) ~= READY) and Q.IsReady() and ValidTarget(target, Q.range) then
 		        CastQ(target)
 	        elseif Menu.Combo.E.Use:Value() and (ComboRotation == 2 or Game.CanUseSpell(ComboRotation) ~= READY) and E.IsReady() and ValidTarget(target, E.range*2) then
@@ -186,12 +195,11 @@ local Load = function()
         Menu.Combo.E:MenuElement({name = "Use E In Combo", id = "Use", value = true})
         Menu.Combo.E:MenuElement({name = "E Mode", id = "Mode", value = 1, drop = {"Side", "Mouse", "Target"}})
         Menu.Combo.E:MenuElement({name = "E Dash Range", id = "Range", value = 125, min = 100, max = 425, step = 5})
-        Menu.Combo:MenuElement({name = "Combo Rotation Priority",  id = "ComboRotation", value = 3, drop = {"Q", "W", "E"}})
+        Menu.Combo:MenuElement({name = "Combo Rotation Priority",  id = "ComboRotation", value = 3, drop = {"Q", "W", "E", "EW"}})
 
         Menu:MenuElement({type = MENU, name = "Auto Harass",  id = "Harass"})
         Menu.Harass:MenuElement({name = "Auto Harass With Extended Q", id = "UseExtQ", value = true})
         Menu.Harass:MenuElement({name = "Mana Manager(%)", id = "Mana", value = 50, min = 1, max = 100, step = 1})
-
 
         Q    = { range = 650                                                                                                }         
         Q2   = { range = 900 , delay = 0.35, speed = math.huge, width = 25, collision = false, aoe = false, type = "linear" }         
