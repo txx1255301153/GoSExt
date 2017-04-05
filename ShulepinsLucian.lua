@@ -7,7 +7,7 @@ else
 	return
 end	
 
-local Menu, Q, Q2, W, E, R 
+local Menu, Q, Q2, W, E, R
 
 local Mode = function()
         if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] then
@@ -37,6 +37,10 @@ end
 local ValidTarget =  function(unit, range)
 	local range = type(range) == "number" and range or math.huge
 	return unit and unit.team ~= myHero.team and unit.valid and unit.distance <= range and not unit.dead and unit.isTargetable and unit.visible
+end
+
+local GetPercentHP = function(unit)
+        return 100 * unit.health / unit.maxHealth
 end
 
 local CircleCircleIntersection = function(c1, c2, r1, r2) 
@@ -85,6 +89,15 @@ local DrawTriangle = function(vector3, color, thickness, size, rot, speed, yShif
         DrawLine3D(PXT1, vector3.y, PZT1, PXT3, vector3.y, PZT3, thickness, color) 	
         DrawLine3D(PXT3, vector3.y, PZT3, PX2, vector3.y, PZ2, thickness, color) 	
         DrawLine3D(PX2, vector3.y, PZ2, PXT1, vector3.y, PZT1, thickness, color) 
+end
+
+local GetItemSlot = function(unit, id)
+        for i = ITEM_1, ITEM_7 do
+		if unit:GetItemData(i).itemID == id and unit:GetSpellData(i).currentCd == 0 then 
+			return i
+		end
+	end
+	return nil
 end
 
 local CastQ = function(target) 
@@ -136,10 +149,25 @@ local CastE = function(target, mode, range)
         end 
 end 
 
+local KB = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6 }
+local BWC = GetItemSlot(myHero, 3144)
+local BOTRK = GetItemSlot(myHero, 3153)
+
+local UseItems = function(target)
+        BWC   = GetItemSlot(myHero, 3144)
+        BOTRK = GetItemSlot(myHero, 3153)
+        if Menu.Items.BOTRK.Use:Value() and BOTRK and ValidTarget(target, 550) and GetPercentHP(myHero) <= Menu.Items.BOTRK.MyHP:Value() and GetPercentHP(target) <= Menu.Items.BOTRK.EnemyHP:Value() then
+        	Control.CastSpell(KB[BOTRK], target)
+        elseif Menu.Items.BWC.Use:Value() and BWC and ValidTarget(target, 550) then
+        	Control.CastSpell(KB[BWC], target)
+        end
+end
+
 local Tick = function()
         local target = GetTarget(1500, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
         if target == nil then return end
-        if Mode() == "Combo" then         	
+        if Mode() == "Combo" then  
+                UseItems(target)    	
         	if Menu.Combo.Q.Use2:Value() then 
         		CastQ2(target) 
         	end 
@@ -202,6 +230,14 @@ local Load = function()
         Menu.Harass:MenuElement({name = "Auto Harass With Extended Q", id = "UseExtQ", value = true})
         Menu.Harass:MenuElement({name = "Mana Manager(%)", id = "Mana", value = 50, min = 1, max = 100, step = 1})
 
+        Menu:MenuElement({type = MENU, name = "Items",  id = "Items"})
+        Menu.Items:MenuElement({type = MENU, name = "Bilgewater Cutlass",  id = "BWC"})
+        Menu.Items.BWC:MenuElement({name = "Use In Combo",  id = "Use", value = true})
+        Menu.Items:MenuElement({type = MENU, name = "Blade of the Ruined King",  id = "BOTRK"})
+        Menu.Items.BOTRK:MenuElement({name = "Use In Combo",  id = "Use", value = true})
+        Menu.Items.BOTRK:MenuElement({name = "My HP(%)",  id = "MyHP", value = 100, min = 1, max = 100, step = 1})
+        Menu.Items.BOTRK:MenuElement({name = "Enemy HP(%)",  id = "EnemyHP", value = 50, min = 1, max = 100, step = 1})
+  
         Menu:MenuElement({type = MENU, name = "Drawings",  id = "Draw"})
         Menu.Draw:MenuElement({name = "Disable All Drawings", id = "Disable", value = false})
 
