@@ -1,42 +1,52 @@
-if myHero.charName ~= "Lucian" then return end 
-
-if FileExist(SCRIPT_PATH.."Orbwalker.lua") then	
-	loadfile(SCRIPT_PATH.."Orbwalker.lua")()
-else
-	print("IC's Orbwalker Not Found. You need to install IC's Orbwalker before using this script")
-	return
-end	
+if myHero.charName ~= "Lucian" then return end 	
 
 local Menu, Q, Q2, W, E, R
 
 local Mode = function()
-        if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] then
-                return "Combo"
-        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS] then
-                return "Harass"
-        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEARS] then
-                return "LaneClear"
-        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_JUNGLECLEAR] then
-                return "LaneClear"
-        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT] then
-                return "LastHit"
-        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_FLEE] then
-                return "Flee"
+        if _G.SDK then
+        	if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] then
+                        return "Combo"
+                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS] then
+                        return "Harass"
+                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEARS] then
+                        return "LaneClear"
+                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_JUNGLECLEAR] then
+                        return "LaneClear"
+                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT] then
+                        return "LastHit"
+                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_FLEE] then
+                        return "Flee"
+                end
+        elseif _G.Orbwalker then
+        	return GOS:GetMode()
         end
         return ""
 end
 
-local GetTarget = function(range, damageType, from)
-        return _G.SDK.TargetSelector:GetTarget(range, damageType, from)
-end
-
-local GetMinions = function()
-        return _G.SDK.ObjectManager:GetEnemyMinions(1500)
+local GetTarget = function(range)
+        local orb
+        if _G.SDK then
+        	orb = _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
+        elseif _G.Orbwalker then
+        	orb = GOS:GetTarget(range, "AD")
+        end
+        return orb
 end
 
 local ValidTarget =  function(unit, range)
 	local range = type(range) == "number" and range or math.huge
 	return unit and unit.team ~= myHero.team and unit.valid and unit.distance <= range and not unit.dead and unit.isTargetable and unit.visible
+end
+
+local GetMinions = function(range)
+        local result = {}
+	for i = 1, Game.MinionCount() do
+		local minion = Game.Minion(i)
+		if minion and ValidTarget(minion, range) and minion.isEnemy then
+			table.insert(result, minion)
+		end
+	end
+	return result
 end
 
 local GetPercentHP = function(unit)
@@ -164,7 +174,7 @@ local UseItems = function(target)
 end
 
 local Tick = function()
-        local target = GetTarget(1500, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
+        local target = GetTarget(1500)
         if target == nil then return end
         if Mode() == "Combo" then  
                 UseItems(target)    	
@@ -179,7 +189,7 @@ end
 
 local Draw = function()
         if myHero.dead or Menu.Draw.Disable:Value() then return end
-	local target = GetTarget(1500, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
+	local target = GetTarget(1500)
 	if target == nil then return end
 	if not inc then inc = 0 end 	
         inc = inc + 0.002 	
@@ -188,7 +198,7 @@ local Draw = function()
 end
 
 local AfterAttack = function()
-        local target = GetTarget(1500, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
+        local target = GetTarget(1500)
         local ComboRotation = Menu.Combo.ComboRotation:Value() - 1
 
 	if Mode() == "Combo" then
@@ -209,6 +219,24 @@ local AfterAttack = function()
 		        CastW(target, Menu.Combo.W.UseFast:Value())
 	        end
         end
+end
+
+local AfterAttackCallback = function(func)
+        if _G.SDK then
+        	_G.SDK.Orbwalker:OnPostAttack(func) 
+        elseif _G.Orbwalker then
+        	_G.GOS:OnAttackComplete(func)
+        end
+end
+
+local CurrentOrbName = function()
+        local orb
+        if _G.SDK then
+        	orb = "IC's Orbwalker"
+        elseif _G.Orbwalker then
+        	orb = "Noddy's Orbwalker"
+        end
+        return orb
 end
 
 local Load = function()        
@@ -254,7 +282,9 @@ local Load = function()
 
         Callback.Add("Tick", function() Tick() end)         
         Callback.Add("Draw", function() Draw() end)
-        _G.SDK.Orbwalker:OnPostAttack(function() AfterAttack() end)           
+        AfterAttackCallback(function() AfterAttack() end) 
+
+        print("Shulepin's Lucian Loaded | Current orbwalker: "..CurrentOrbName())         
 end 
 
 function OnLoad() Load() end
