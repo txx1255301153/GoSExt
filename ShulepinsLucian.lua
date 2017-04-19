@@ -618,7 +618,7 @@ local Load = function()
 
         Menu:MenuElement({name = " ", drop = {"Script Info"}})
         Menu:MenuElement({name = "Script Version", drop = {"1.0"}})
-        Menu:MenuElement({name = "League Version", drop = {"7.7.1703311516"}})
+        Menu:MenuElement({name = "League Version", drop = {"7.8"}})
         Menu:MenuElement({name = "Author", drop = {"Shulepin"}})
 
         Q    = { range = 650                                                                                                }         
