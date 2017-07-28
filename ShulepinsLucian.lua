@@ -41,46 +41,23 @@ local pairs		        = pairs
 local Menu, Q, Q2, W, E, R
 
 local Mode = function()
-        if _G.SDK then
-        	if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] then
-                        return "Combo"
-                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS] then
-                        return "Harass"
-                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEARS] then
-                        return "LaneClear"
-                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_JUNGLECLEAR] then
-                        return "LaneClear"
-                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT] then
-                        return "LastHit"
-                elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_FLEE] then
-                        return "Flee"
-                end
-        elseif _G.Orbwalker then
-        	if GOS:GetMode() == "Clear" then
-        		return "LaneClear"
-        	else
-        	        return GOS:GetMode()
-        	end
-        end
-        return ""
-end
-
-local LastMove = 0
-local Move = function(pos)
-	if LastMove + 250 <= LocalGetTickCount() then
-		LocalControlMove(pos)
-	        LastMove = LocalGetTickCount()
+        if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] then
+                return "Combo"
+        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS] then
+                return "Harass"
+        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEARS] then
+                return "LaneClear"
+        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_JUNGLECLEAR] then
+                return "LaneClear"
+        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT] then
+                return "LastHit"
+        elseif _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_FLEE] then
+                return "Flee"
         end
 end
 
 local GetTarget = function(range)
-        local orb
-        if _G.SDK then
-        	orb = _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
-        elseif _G.Orbwalker then
-        	orb = GOS:GetTarget(range, "AD")
-        end
-        return orb
+        return _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_PHYSICAL, myHero.pos)
 end
 
 local ValidTarget =  function(unit, range)
@@ -335,7 +312,7 @@ local LvLOrder = {
 local LvLSlot = nil
 local LvLTick = 0
 local AutoLvLUp = function()
-        local MyLvLPts = myHero.levelData.lvlPts
+        local MyLvLPts = myHero.levelData.lvl - (myHero:GetSpellData(_Q).level + myHero:GetSpellData(_W).level + myHero:GetSpellData(_E).level + myHero:GetSpellData(_R).level)
         local MyLvL = myHero.levelData.lvl
         local Sec = LvLOrder[Menu.lvlup.Order:Value()][MyLvL - MyLvLPts + 1]
 
@@ -369,13 +346,17 @@ local Tick = function()
         			if E.IsReady() then
         			        LocalCastSpell(HK_E, p2) 
         			end                               
-        			Move(p2)                         
+        			--Move(p2)      
+                                _G.SDK.Orbwalker.ForceMovement = p2                   
         		else                                 
-        			Move(p3)                       
+        			--Move(p3)  
+                                _G.SDK.Orbwalker.ForceMovement = p3                     
         		end                 
         	else                         
-        		Move(p1)                
+        		_G.SDK.Orbwalker.ForceMovement = p1               
         	end     
+        else
+                _G.SDK.Orbwalker.ForceMovement = nil 
         end	
         if Mode() == "LastHit" and GetPercentMP(myHero) >= Menu.LastHit.Mana:Value() and Menu.LastHit.Q.Use:Value() and Q.IsReady() then
         	for i, minion in pairs(GetMinions()) do
@@ -458,6 +439,12 @@ local Drawings = function()
         end 
 end
 
+local RangeLogicForE = function(target)
+        local pred = target:GetPrediction(math.huge, 0.25)
+        local range = GetDistance(pred) < myHero.range and 125 or 425
+        return range
+end
+
 local AfterAttack = function()
         local target = GetTarget(1500)
         local ComboRotation = Menu.Combo.ComboRotation:Value() - 1
@@ -468,7 +455,7 @@ local AfterAttack = function()
 	        	if Menu.Combo.W.Use:Value() and W.IsReady() and ValidTarget(target, W.range) then
 		                CastW(target, Menu.Combo.W.UseFast:Value())
 	                elseif Menu.Combo.E.Use:Value() and E.IsReady() and ValidTarget(target, E.range*2) then
-		                CastE(target, Menu.Combo.E.Mode:Value(), Menu.Combo.E.Range:Value())
+		                CastE(target, Menu.Combo.E.Mode:Value(), RangeLogicForE(target)) --Menu.Combo.E.Range:Value()
 	                elseif Menu.Combo.Q.Use:Value() and Q.IsReady() and ValidTarget(target, Q.range) then
 		                CastQ(target)
 	                end
@@ -476,7 +463,7 @@ local AfterAttack = function()
 		if Menu.Combo.Q.Use:Value() and (ComboRotation == 0 or LocalGameCanUseSpell(ComboRotation) ~= READY) and Q.IsReady() and ValidTarget(target, Q.range) then
 		        CastQ(target)
 	        elseif Menu.Combo.E.Use:Value() and (ComboRotation == 2 or LocalGameCanUseSpell(ComboRotation) ~= READY) and E.IsReady() and ValidTarget(target, E.range*2) then
-		        CastE(target, Menu.Combo.E.Mode:Value(), Menu.Combo.E.Range:Value())
+		        CastE(target, Menu.Combo.E.Mode:Value(), RangeLogicForE(target)) --Menu.Combo.E.Range:Value()
 	        elseif Menu.Combo.W.Use:Value() and (ComboRotation == 1 or LocalGameCanUseSpell(ComboRotation) ~= READY) and W.IsReady() and ValidTarget(target, W.range) then
 		        CastW(target, Menu.Combo.W.UseFast:Value())
 	        end
@@ -493,20 +480,12 @@ local AfterAttack = function()
         end
 end
 
-local AfterAttackCallback = function(func)
-        if _G.SDK then
-        	_G.SDK.Orbwalker:OnPostAttack(func) 
-        elseif _G.Orbwalker then
-        	_G.GOS:OnAttackComplete(func)
-        end
-end
-
 local CurrentOrbName = function()
         local orb
         if _G.SDK then
         	orb = "IC's Orbwalker"
-        elseif _G.Orbwalker then
-        	orb = "Noddy's Orbwalker, I recommend using IC's Orbwalker"
+        else
+        	orb = "Orbwalker Not Found, Enable IC's Orbwalker"
         end
         return orb
 end
@@ -526,7 +505,7 @@ local Load = function()
         Menu.Combo:MenuElement({type = MENU, name = "[E] Relentless Pursuit",  id = "E"})
         Menu.Combo.E:MenuElement({name = "Use E In Combo", id = "Use", value = true})
         Menu.Combo.E:MenuElement({name = "E Mode", id = "Mode", value = 1, drop = {"Side", "Mouse", "Target"}})
-        Menu.Combo.E:MenuElement({name = "E Dash Range", id = "Range", value = 125, min = 100, max = 425, step = 5})
+        ----Menu.Combo.E:MenuElement({name = "E Dash Range", id = "Range", value = 125, min = 100, max = 425, step = 5})
         Menu.Combo:MenuElement({name = "Combo Rotation Priority",  id = "ComboRotation", value = 3, drop = {"Q", "W", "E", "EW"}})
 
         Menu:MenuElement({type = MENU, name = "Harass",  id = "Harass"})
@@ -617,8 +596,8 @@ local Load = function()
         Menu.Draw:MenuElement({name = "Draw Walljump Position", id = "WJPos", value = true})
 
         Menu:MenuElement({name = " ", drop = {"Script Info"}})
-        Menu:MenuElement({name = "Script Version", drop = {"1.0"}})
-        Menu:MenuElement({name = "League Version", drop = {"7.8"}})
+        Menu:MenuElement({name = "Script Version", drop = {"1.1"}})
+        Menu:MenuElement({name = "League Version", drop = {"7.15"}})
         Menu:MenuElement({name = "Author", drop = {"Shulepin"}})
 
         Q    = { range = 650                                                                                                }         
@@ -636,7 +615,7 @@ local Load = function()
 
         LocalCallbackAdd("Tick", function() Tick() end)         
         LocalCallbackAdd("Draw", function() Drawings() end)
-        AfterAttackCallback(function() AfterAttack() end) 
+        _G.SDK.Orbwalker:OnPostAttack(function() AfterAttack() end) 
 
         print("Shulepin's Lucian Loaded | Current orbwalker: "..CurrentOrbName())         
 end 
