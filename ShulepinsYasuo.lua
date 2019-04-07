@@ -663,8 +663,14 @@ function Yasuo:Load()
 	end
 
 	function this:Harass(target)
+		function Yasuo:CastQ3(target, Q3castPos)
+    if LocalGameTimer() - OnWaypoint(target).time > 0.05 and (LocalGameTimer() - OnWaypoint(target).time < 0.125 or LocalGameTimer() - OnWaypoint(target).time > 1.25) then
+        if GetDistance(myHero.pos, Q3castPos) <= YasuoQ3.range then
+            LocalControlCastSpell(HK_Q, Q3castPos)
+				   end
+    end
+end	
 		if target == nil or Yasuo.Common.IsWindUp() then return end
-
 		if this.Q:IsReady() and Yasuo.Common.ValidTarget(target, this.Q.range) then
 			if this.Menu.Harass.Q.Use:Value() and this.Q:Data().name ~= "YasuoQ3W" then
 				if not Yasuo.Common.IsDashing() then
