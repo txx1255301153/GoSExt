@@ -667,7 +667,7 @@ function Yasuo:Load()
    
         if GetDistance(myHero.pos, Q3castPos) <= 1500 then
             LocalControlCastSpell(HK_Q, Q3castPos)
-				   end
+			
     end
 end	
 		if target == nil or Yasuo.Common.IsWindUp() then return end
