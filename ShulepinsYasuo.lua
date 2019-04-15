@@ -757,32 +757,16 @@ end
 	end
 
 	function this:AutoWindWall()
-		for i = 1, Game.MissileCount() do
-			local spell = nil
-			local obj = Game.Missile(i)
-			local data = obj.missileData
-			local source = Yasuo.Common.GetHeroByHandle(data.owner)
-			if source then 
-				if this.SpellData[source.charName] then
-					spell = this.SpellData[source.charName][data.name:lower()]
-				end
-				if spell and not spell.isSkillshot and data.target == myHero.handle then
-					if this.Menu.Windwall.DetectedSpells[spell.name].Use:Value() and this.Menu.Windwall.DetectedSpells[spell.name].Danger:Value() >= this.Menu.Windwall.Danger:Value() then
-						this.W:CastOnPosition(obj.pos)
-						return
-					end
-				end
-				if spell and spell.isSkillshot and obj.isEnemy and data.speed and data.width and data.endPos and obj.pos then
-					if this.Menu.Windwall.DetectedSpells[spell.name].Use:Value() and this.Menu.Windwall.DetectedSpells[spell.name].Danger:Value() >= this.Menu.Windwall.Danger:Value() then
-						local pointSegment, pointLine, isOnSegment = Yasuo.Common.VectorPointProjectionOnLineSegment(obj.pos, data.endPos, myHero.pos)
-						if isOnSegment and myHero.pos:DistanceTo(Vector(pointSegment.x, myHero.pos.y, pointSegment.y)) < data.width + myHero.boundingRadius then
-							this.W:CastOnPosition(obj.pos)
-						end
-					end
-				end
-			end
-		end
-	end
+		     YasuoQ3 = {speed = 1200, range = 1000, delay = myHero.attackData.windUpTime, radius = 90, width = 90, collision = false, aoe = true, type = "line"}
+       local targetQ3 = GOS:GetTarget(YasuoQ3.range, "AD")
+            if IsReady(_Q) and GetSpellQName() == "YasuoQ3Wrapper" then
+                if ValidTarget(targetQ3, YasuoQ3.range) then
+                    DelayAction(function()
+                        local hitChance, aimPosition = HPred:GetHitchance(myHero.pos, targetQ3, YasuoQ3.range, YasuoQ3.delay, YasuoQ3.speed, YasuoQ3.radius, true)
+                        if hitChance and hitChance >= 2 then
+                            self:CastQ3(targetQ3, aimPosition)
+                        end
+
 
 	function this:IsMarked(unit)
 		return Yasuo.Common.HasBuff(unit, "YasuoDashWrapper")
