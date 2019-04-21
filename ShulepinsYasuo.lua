@@ -663,13 +663,7 @@ function Yasuo:Load()
 	end
 
 	function this:Harass(target)
-		function Yasuo:CastQ3(target, Q3castPos)
-   
-        if GetDistance(myHero.pos, Q3castPos) <= 1500 then
-            LocalControlCastSpell(HK_Q, Q3castPos)
-			
-    end
-end	
+
 		if target == nil or Yasuo.Common.IsWindUp() then return end
 		if this.Q:IsReady() and Yasuo.Common.ValidTarget(target, this.Q.range) then
 			if this.Menu.Harass.Q.Use:Value() and this.Q:Data().name ~= "YasuoQ3W" then
