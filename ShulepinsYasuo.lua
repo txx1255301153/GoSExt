@@ -662,22 +662,7 @@ function Yasuo:Load()
 		end
 	end
 
-	function this:Harass(target)
 
-		if target == nil or Yasuo.Common.IsWindUp() then return end
-		if this.Q:IsReady() and Yasuo.Common.ValidTarget(target, this.Q.range) then
-			if this.Menu.Harass.Q.Use:Value() and this.Q:Data().name ~= "YasuoQ3W" then
-				if not Yasuo.Common.IsDashing() then
-					this.Q:CastWithPrediction(target)
-				end
-			end
-			if this.Menu.Harass.Q3.Use:Value() and this.Q:Data().name == "YasuoQ3W" then
-				if not Yasuo.Common.IsDashing() then
-					this.Q:CastWithPrediction(target)
-				end
-			end
-		end
-	end
 
 	function this:LastHit()
 		if Yasuo.Common.IsWindUp() then return end
